@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono - Timeline Challenge</title>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// ─── CSS ──────────────────────────────────────────────────────────────────
+const G = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+::-webkit-scrollbar{height:4px;width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);border-radius:2px;}
+.tl-scroll::-webkit-scrollbar{display:none;}
+.tl-scroll{-ms-overflow-style:none;scrollbar-width:none;}
+
+@keyframes fadeUp   {from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes cardIn   {from{opacity:0;transform:translateY(26px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes chipIn   {from{opacity:0;transform:scale(.55) translateY(14px)}to{opacity:1;transform:none}}
+@keyframes chipOut  {0%{opacity:1;transform:scale(1)}40%{transform:scale(1.06);filter:brightness(.4) sepia(1) hue-rotate(-30deg)}100%{opacity:0;transform:scale(.1) translateY(44px)}}
+@keyframes resBounce{0%{opacity:0;transform:scale(.2)}65%{opacity:1;transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes scorePop {0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-110px) scale(2.2)}}
+@keyframes shake    {0%,100%{transform:translateX(0)}18%{transform:translateX(-13px) rotate(-2deg)}36%{transform:translateX(13px) rotate(2deg)}54%{transform:translateX(-9px)}72%{transform:translateX(9px)}90%{transform:translateX(-3px)}}
+@keyframes flame    {0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg) scale(1.2)}}
+@keyframes glowP    {0%,100%{text-shadow:0 0 6px rgba(201,168,76,.1)}50%{text-shadow:0 0 28px rgba(201,168,76,.7)}}
+@keyframes bounceD  {0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+@keyframes dateIn   {from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes zoneGlow {0%,100%{box-shadow:inset 0 0 20px rgba(201,168,76,.08),0 0 20px rgba(201,168,76,.2)}50%{box-shadow:inset 0 0 40px rgba(201,168,76,.15),0 0 40px rgba(201,168,76,.45)}}
+@keyframes ghostP   {0%,100%{opacity:.38}50%{opacity:.65}}
+@keyframes greenRing{0%{box-shadow:0 0 0 3px #4ade80,0 0 40px rgba(74,222,128,.9);border-color:#4ade80}60%{box-shadow:0 0 0 14px rgba(74,222,128,.05)}100%{box-shadow:none;border-color:rgba(201,168,76,.18)}}
+@keyframes redRing  {0%{box-shadow:0 0 0 3px #f87171,0 0 40px rgba(248,113,113,.9);border-color:#f87171}60%{box-shadow:0 0 0 14px rgba(248,113,113,.05)}100%{box-shadow:none;border-color:rgba(201,168,76,.18)}}
+@keyframes logoGlow {0%,100%{text-shadow:0 0 40px rgba(201,168,76,.25),0 2px 0 rgba(0,0,0,.9)}50%{text-shadow:0 0 90px rgba(201,168,76,.65),0 2px 0 rgba(0,0,0,.9)}}
+@keyframes rankIn   {from{opacity:0;transform:scale(.3) rotate(-15deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+.fade-up   {animation:fadeUp .45s cubic-bezier(.34,1.2,.64,1) both}
+.card-anim {animation:cardIn .42s cubic-bezier(.34,1.2,.64,1) both}
+.chip-in   {animation:chipIn .38s cubic-bezier(.34,1.5,.64,1) both}
+.chip-out  {animation:chipOut .58s ease-out forwards}
+.chip-ok   {animation:greenRing .95s ease-out forwards}
+.chip-bad  {animation:redRing .95s ease-out forwards}
+.score-pop {animation:scorePop 1.2s ease-out forwards;pointer-events:none;position:fixed;top:58px;right:26px;z-index:2000}
+.flame     {display:inline-block;animation:flame .45s ease-in-out infinite}
+.glow      {animation:glowP 1.8s ease-in-out infinite}
+.bounce    {display:inline-block;animation:bounceD 1.4s ease-in-out infinite}
+.shake     {animation:shake .5s ease-out}
+.date-in   {animation:dateIn .4s .05s ease-out both}
+.ghost-p   {animation:ghostP .9s ease-in-out infinite}
+.logo-glow {animation:logoGlow 2.6s ease-in-out infinite}
+.rank-in   {animation:rankIn .4s cubic-bezier(.34,1.5,.64,1) both}
+.overlay-in{animation:overlayIn .12s ease-out both}
+
+.zone{
+  flex:1;min-width:24px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border-radius:12px;position:relative;
+  transition:background .12s,border-color .12s;
+  align-self:stretch;border:1.5px dashed transparent;
+}
+.zone::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:2px;height:55%;max-height:56px;background:rgba(201,168,76,.18);border-radius:2px;pointer-events:none;}
+.zone.over{border-color:rgba(201,168,76,.55);background:rgba(201,168,76,.06);animation:zoneGlow .85s ease-in-out infinite;}
+.zone.over::after{display:none;}
+
+.tog{width:50px;height:26px;border-radius:13px;border:1px solid rgba(201,168,76,.3);
+  background:rgba(201,168,76,.08);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;}
+.tog.on{background:rgba(201,168,76,.25);border-color:rgba(201,168,76,.6);}
+.tog-dot{width:18px;height:18px;border-radius:50%;background:rgba(201,168,76,.35);
+  position:absolute;top:3px;left:3px;transition:all .2s;}
+.tog.on .tog-dot{left:28px;background:#c9a84c;}
+
+.seg{display:flex;border:1px solid rgba(201,168,76,.2);border-radius:8px;overflow:hidden;}
+.seg-b{flex:1;min-width:38px;padding:8px 0;font-family:'Crimson Text',serif;font-size:14px;
+  cursor:pointer;border:none;background:rgba(128,100,50,.08);color:inherit;opacity:0.5;transition:all .15s;}
+.seg-b.on{background:rgba(201,168,76,.28);opacity:1;font-weight:700;}
+.seg-b:hover:not(.on){background:rgba(201,168,76,.14);opacity:0.8;}
+`;
+
+// ─── Web Audio (module-level, no React state) ─────────────────────────────
+let _ctx=null;
+function ctx(){
+  if(!_ctx) _ctx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_ctx.state==="suspended") _ctx.resume();
+  return _ctx;
+}
+function osc(freq,type,dur,vol,t=0){
+  try{
+    const c=ctx(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.type=type;o.frequency.setValueAtTime(freq,c.currentTime+t);
+    g.gain.setValueAtTime(0,c.currentTime+t);
+    g.gain.linearRampToValueAtTime(vol,c.currentTime+t+.012);
+    g.gain.exponentialRampToValueAtTime(.001,c.currentTime+t+dur);
+    o.start(c.currentTime+t);o.stop(c.currentTime+t+dur+.06);
+  }catch{}
+}
+function noise(dur,vol,t=0,freq=200){
+  try{
+    const c=ctx(),n=c.sampleRate*dur,b=c.createBuffer(1,n,c.sampleRate);
+    const d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+    const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+    s.buffer=b;f.type="bandpass";f.frequency.value=freq;
+    s.connect(f);f.connect(g);g.connect(c.destination);
+    g.gain.setValueAtTime(vol,c.currentTime+t);
+    g.gain.exponentialRampToValueAtTime(.001,c.currentTime+t+dur);
+    s.start(c.currentTime+t);s.stop(c.currentTime+t+dur+.06);
+  }catch{}
+}
+const SFX={
+  drag:    ()=>{osc(110,"sine",.12,.18);noise(.08,.06);},
+  hover:   ()=>{osc(900,"sine",.055,.06);},
+  place:   ()=>{osc(380,"sine",.08,.12);noise(.04,.04);},
+  correct: ()=>{osc(523,"sine",.22,.28,0);osc(659,"sine",.22,.28,.09);osc(784,"sine",.28,.3,.18);osc(1047,"sine",.45,.24,.27);},
+  streak:  n=>{for(let i=0;i<Math.min(n,5);i++)osc(523*Math.pow(1.12,i),"triangle",.18,.17,i*.06);},
+  wrong:   ()=>{osc(200,"sawtooth",.1,.22,0);osc(140,"sawtooth",.16,.18,.1);noise(.14,.1,.04);},
+  destroy: ()=>{try{const c=ctx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type="sawtooth";o.frequency.setValueAtTime(380,c.currentTime);o.frequency.exponentialRampToValueAtTime(55,c.currentTime+.4);g.gain.setValueAtTime(.17,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.4);o.start(c.currentTime);o.stop(c.currentTime+.44);noise(.3,.07,.04,140);}catch{}},
+  tick:    ()=>{osc(1200,"sine",.04,.05);},
+  urgent:  ()=>{osc(1700,"sine",.05,.09);},
+  menu:    ()=>{osc(523,"sine",.25,.14,0);osc(784,"sine",.3,.1,.14);},
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+const parseDate=s=>{if(!s)return new Date(0);const d=new Date(s);if(!isNaN(d))return d;const y=parseInt(s);return isNaN(y)?new Date(0):new Date(y,0,1);};
+const fmtDate=s=>{if(!s)return"";try{const d=parseDate(s);if(String(s).length<=4){const y=d.getFullYear();return`${Math.abs(y)} ${y<0?"BC":"AD"}`;}return d.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});}catch{return s;}};
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+async function wikiImg(title){
+  try{
+    const r=await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=500&origin=*`);
+    const d=await r.json();const p=Object.values(d.query?.pages||{})[0];
+    if(p?.thumbnail?.source)return p.thumbnail.source;
+    const sr=await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*&srlimit=1`);
+    const sd=await sr.json();const hit=sd.query?.search?.[0]?.title;if(!hit)return null;
+    const ir=await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(hit)}&prop=pageimages&format=json&pithumbsize=500&origin=*`);
+    const id=await ir.json();return Object.values(id.query?.pages||{})[0]?.thumbnail?.source||null;
+  }catch{return null;}
+}
+
+const MAX_TL=5;
+const SCROLL_ZONE_W=86;
+
+// ─── Datasets ──────────────────────────────────────────────────────────────
+const DATASETS={
+  europe:[
+    {id:2001,title:"Magna Carta Signed",date:"1215-06-15",description:"King John seals the Great Charter at Runnymede, establishing that the monarch is subject to the rule of law.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg/400px-Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg"},
+    {id:2002,title:"Black Death Reaches Europe",date:"1347-10-01",description:"The bubonic plague arrives in Sicily from Crimea. Over the next five years it kills one-third of Europe's entire population.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Danse_macabre_by_Michael_Wolgemut.png/400px-Danse_macabre_by_Michael_Wolgemut.png"},
+    {id:2003,title:"Gutenberg Prints Bible",date:"1455-02-23",description:"Johannes Gutenberg completes the first major book printed in Europe using movable type, revolutionising the spread of knowledge.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/400px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg"},
+    {id:2004,title:"French Revolution",date:"1789-07-14",description:"The storming of the Bastille ignites a radical transformation of France, sweeping away centuries of monarchy and launching the ideals of liberty and equality.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Prise_de_la_Bastille.jpg/400px-Prise_de_la_Bastille.jpg"},
+    {id:2005,title:"Napoleon Defeated at Waterloo",date:"1815-06-18",description:"Wellington and Blücher's forces defeat Napoleon at Waterloo, ending the Napoleonic Wars and reshaping Europe's borders.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Battle_of_Waterloo_1815.PNG/400px-Battle_of_Waterloo_1815.PNG"},
+    {id:2006,title:"Darwin Publishes Origin of Species",date:"1859-11-24",description:"Darwin's theory of evolution by natural selection transforms biology and our understanding of life on Earth.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Darwin%27s_finches_by_Gould.jpg/400px-Darwin%27s_finches_by_Gould.jpg"},
+    {id:2007,title:"First World War Begins",date:"1914-07-28",description:"Austria-Hungary declares war on Serbia following the assassination of Archduke Franz Ferdinand, igniting a conflict that kills 20 million people.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Over_the_top_TNT.jpg/400px-Over_the_top_TNT.jpg"},
+    {id:2008,title:"Russian Revolution",date:"1917-11-07",description:"The Bolsheviks seize power in Petrograd, overthrowing the Provisional Government and establishing Soviet rule.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Russian_soldiers_during_the_July_Days.jpg/400px-Russian_soldiers_during_the_July_Days.jpg"},
+    {id:2009,title:"D-Day Normandy Landings",date:"1944-06-06",description:"Allied forces launch the largest seaborne invasion in history on the beaches of Normandy, turning the tide of World War II.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Into_the_Jaws_of_Death_23-0455M_edit.jpg/400px-Into_the_Jaws_of_Death_23-0455M_edit.jpg"},
+    {id:2010,title:"Fall of the Berlin Wall",date:"1989-11-09",description:"East Germany opens its borders after 28 years. Jubilant crowds tear down the Wall, ending the Cold War's most potent symbol.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Mauer1.jpg/400px-Mauer1.jpg"},
+    {id:2011,title:"World Wide Web Invented",date:"1991-08-06",description:"Tim Berners-Lee makes the World Wide Web publicly available at CERN, beginning the transformation of human communication.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/WWW_logo_by_Robert_Cailliau.svg/400px-WWW_logo_by_Robert_Cailliau.svg.png"},
+    {id:2012,title:"End of Apartheid",date:"1994-04-27",description:"South Africa holds its first fully democratic elections. Nelson Mandela becomes president, ending decades of institutionalised racial segregation.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Nelson_Mandela_1994.jpg/400px-Nelson_Mandela_1994.jpg"},
+  ],
+  americas:[
+    {id:3001,title:"Columbus Reaches Americas",date:"1492-10-12",description:"Christopher Columbus makes landfall in the Bahamas, beginning sustained contact between the Old World and the New.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Landing_of_Columbus_%282%29.jpg/400px-Landing_of_Columbus_%282%29.jpg"},
+    {id:3002,title:"Declaration of Independence",date:"1776-07-04",description:"The thirteen American colonies declare independence from Britain. Thomas Jefferson's document becomes a foundation of modern democratic thought.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/United_States_Declaration_of_Independence.jpg/400px-United_States_Declaration_of_Independence.jpg"},
+    {id:3003,title:"Louisiana Purchase",date:"1803-04-30",description:"The United States purchases 828,000 square miles from France, doubling the country's size and opening the West.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Louisiana_purchase_map.jpg/400px-Louisiana_purchase_map.jpg"},
+    {id:3004,title:"American Civil War Begins",date:"1861-04-12",description:"Confederate forces attack Fort Sumter, beginning four years of war that would determine the nation's future and end slavery.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Battle_of_Gettysburg%2C_by_Currier_and_Ives.png/400px-Battle_of_Gettysburg%2C_by_Currier_and_Ives.png"},
+    {id:3005,title:"Wright Brothers First Flight",date:"1903-12-17",description:"Orville Wright pilots the first powered airplane at Kitty Hawk. The flight lasts 12 seconds and covers 37 metres.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Flightone.jpg/400px-Flightone.jpg"},
+    {id:3006,title:"Panama Canal Opens",date:"1914-08-15",description:"The Panama Canal opens, connecting the Atlantic and Pacific Oceans and revolutionising global trade routes.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Miraflores.locks.arp.750pix.jpg/400px-Miraflores.locks.arp.750pix.jpg"},
+    {id:3007,title:"Wall Street Crash",date:"1929-10-24",description:"Black Thursday triggers the Great Depression, wiping out millions of investors and plunging the world into economic crisis.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/American_union_bank.gif/400px-American_union_bank.gif"},
+    {id:3008,title:"Moon Landing",date:"1969-07-20",description:"Apollo 11 touches down on the Sea of Tranquility. Neil Armstrong becomes the first human to walk on the Moon.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Aldrin_Apollo_11_original.jpg/400px-Aldrin_Apollo_11_original.jpg"},
+    {id:3009,title:"Watergate Scandal",date:"1972-06-17",description:"The arrest of five men breaking into the Democratic National Committee HQ begins a political crisis that forces Nixon to resign.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/WatergateFromAir.jpg/400px-WatergateFromAir.jpg"},
+    {id:3010,title:"9/11 Attacks",date:"2001-09-11",description:"Coordinated terrorist attacks destroy the Twin Towers and hit the Pentagon, killing nearly 3,000 people and reshaping global geopolitics.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/South_face_tower_two.jpg/400px-South_face_tower_two.jpg"},
+    {id:3011,title:"First iPhone Unveiled",date:"2007-01-09",description:"Steve Jobs introduces an iPod, a phone, and an internet communicator in one device. The smartphone era begins.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/IPhone_1st_Gen.svg/200px-IPhone_1st_Gen.svg.png"},
+    {id:3012,title:"Obama Elected President",date:"2008-11-04",description:"Barack Obama becomes the first African-American President of the United States, winning by a decisive electoral margin.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/President_Barack_Obama.jpg/400px-President_Barack_Obama.jpg"},
+  ],
+  asia:[
+    {id:4001,title:"Mongol Empire Founded",date:"1206-01-01",description:"Genghis Khan unites the Mongol tribes and establishes the empire that would become the largest contiguous land empire in history.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Genghis_Khan_at_enthronement.jpg/400px-Genghis_Khan_at_enthronement.jpg"},
+    {id:4002,title:"Zheng He's First Voyage",date:"1405-07-11",description:"Chinese admiral Zheng He sets sail with 300 ships and 28,000 men, reaching Southeast Asia, India, Arabia and East Africa.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Zheng_He_ship_compare.svg/400px-Zheng_He_ship_compare.svg.png"},
+    {id:4003,title:"Battle of Plassey",date:"1757-06-23",description:"The British East India Company defeats the Nawab of Bengal, beginning British dominance over the Indian subcontinent.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/The_Battle_of_Plassey.jpg/400px-The_Battle_of_Plassey.jpg"},
+    {id:4004,title:"Meiji Restoration",date:"1868-01-03",description:"Emperor Meiji is restored to power in Japan, beginning rapid modernisation and the transformation of a feudal state into an industrial power.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Emperor_Meiji.jpg/400px-Emperor_Meiji.jpg"},
+    {id:4005,title:"Opium War Ends",date:"1842-08-29",description:"China signs the Treaty of Nanking, ceding Hong Kong to Britain and opening treaty ports — the beginning of the 'century of humiliation'.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/First_Opium_War_collage.jpg/400px-First_Opium_War_collage.jpg"},
+    {id:4006,title:"Indian Independence",date:"1947-08-15",description:"India gains independence from Britain. The subcontinent is partitioned into India and Pakistan in one of history's largest migrations.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Nehru_signing.jpg/400px-Nehru_signing.jpg"},
+    {id:4007,title:"People's Republic of China Founded",date:"1949-10-01",description:"Mao Zedong proclaims the People's Republic of China in Tiananmen Square after the Communist Party's victory in the civil war.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Mao_Proclaiming_New_China.JPG/400px-Mao_Proclaiming_New_China.JPG"},
+    {id:4008,title:"Korean War Armistice",date:"1953-07-27",description:"An armistice ends active fighting in the Korean War, leaving the peninsula divided at the 38th parallel — a division that persists today.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Korean_War_armistice_agreement_1953.jpg/400px-Korean_War_armistice_agreement_1953.jpg"},
+    {id:4009,title:"Vietnam War Ends",date:"1975-04-30",description:"North Vietnamese forces capture Saigon, ending 20 years of war and reunifying Vietnam under communist rule.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Saigon-hubert-van-es.jpg/400px-Saigon-hubert-van-es.jpg"},
+    {id:4010,title:"Tiananmen Square Protests",date:"1989-06-04",description:"The Chinese military crushes pro-democracy protests in Tiananmen Square, killing hundreds in an event still censored in China.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Tiananmen_Square%2C_1988.jpg/400px-Tiananmen_Square%2C_1988.jpg"},
+    {id:4011,title:"Sputnik Launched",date:"1957-10-04",description:"The Soviet Union launches the first artificial Earth satellite, triggering the Space Race and shocking the Western world.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Sputnik_asm.jpg/400px-Sputnik_asm.jpg"},
+    {id:4012,title:"Atomic Bomb on Hiroshima",date:"1945-08-06",description:"The United States drops an atomic bomb on Hiroshima, Japan, killing 80,000 instantly and ushering in the nuclear age.",image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Nagasakibomb.jpg/400px-Nagasakibomb.jpg"},
+  ],
+};
+const DATASET_META=[
+  {key:"europe", label:"Europe",    icon:"🏰", sub:"From the Magna Carta to the Cold War"},
+  {key:"americas",label:"Americas", icon:"🦅", sub:"From Columbus to the smartphone era"},
+  {key:"asia",   label:"Asia",      icon:"🏯", sub:"From the Mongols to modern geopolitics"},
+];
+
+const RANKS=[
+  {min:100,label:"S",col:"#ffd700",glow:"rgba(255,215,0,.8)"},
+  {min:95, label:"A",col:"#4ade80",glow:"rgba(74,222,128,.7)"},
+  {min:85, label:"B",col:"#60a5fa",glow:"rgba(96,165,250,.7)"},
+  {min:60, label:"C",col:"#fb923c",glow:"rgba(251,146,60,.7)"},
+  {min:40, label:"G",col:"#c084fc",glow:"rgba(192,132,252,.7)"},
+  {min:0,  label:"F",col:"#f87171",glow:"rgba(248,113,113,.7)"},
+];
+const getRank=pct=>RANKS.find(r=>pct>=r.min)||RANKS[RANKS.length-1];
+
+// ─── Settings modal ────────────────────────────────────────────────────────
+function SettingsModal({cfg,onDone,onLiveChange}){
+  const [s,setS]=useState(cfg);
+  const p=(k,v)=>{
+    const next={...s,[k]:v};
+    setS(next);
+    if(k==="lightMode") onLiveChange?.(next); // instant preview for theme
+  };
+  const lm=s.lightMode; // use local state so modal repaints instantly on toggle
+  const gold =lm?"#9a6f10":"#c9a84c";
+  const text =lm?"#2a1f08":"#e8d9b5";
+  const bord =lm?"rgba(160,120,40,.12)":"rgba(201,168,76,.08)";
+  const sub  =lm?"rgba(60,40,10,.65)":"rgba(232,217,181,.65)";
+  const note =lm?"rgba(100,70,10,.7)":"rgba(201,168,76,.75)";
+  
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",background:lm?"rgba(200,180,120,.55)":"rgba(0,0,0,.72)",backdropFilter:"blur(10px)",animation:"overlayIn .2s ease both"}}
+      onClick={e=>{if(e.target===e.currentTarget)onDone(s);}}>
+      <div style={{background:lm?"linear-gradient(155deg,#faf4e0,#f0e8d0)":"linear-gradient(155deg,#1c1408,#0f0b04)",border:`1px solid ${lm?"rgba(160,120,40,.25)":"rgba(201,168,76,.22)"}`,borderRadius:22,padding:"32px 36px",maxWidth:440,width:"90%",boxShadow:"0 32px 80px rgba(0,0,0,.35)",animation:"fadeUp .3s cubic-bezier(.34,1.2,.64,1) both"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:26}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:22,letterSpacing:5,color:gold}}>SETTINGS</div>
+          <button onClick={()=>onDone(s)} style={{background:"none",border:"none",color:note,fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+
+        {/* Light Mode */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 0",borderBottom:`1px solid ${bord}`}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,color:text}}>Light Mode</div>
+            <div style={{fontSize:12,color:sub,marginTop:2}}>Bright theme for well-lit rooms</div>
+          </div>
+          <div className={`tog${s.lightMode?" on":""}`} onClick={()=>p("lightMode",!s.lightMode)}><div className="tog-dot"/></div>
+        </div>
+
+        {/* Sound */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 0",borderBottom:`1px solid ${bord}`}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,color:text}}>Sound Effects</div>
+            <div style={{fontSize:12,color:sub,marginTop:2}}>Feedback sounds and music</div>
+          </div>
+          <div className={`tog${s.sound?" on":""}`} onClick={()=>p("sound",!s.sound)}><div className="tog-dot"/></div>
+        </div>
+
+        {/* Cards */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 0",borderBottom:`1px solid ${bord}`}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,color:text}}>Cards per Game</div>
+            <div style={{fontSize:12,color:sub,marginTop:2}}>Drawn randomly from the full set</div>
+          </div>
+          <div className="seg">{[5,8,10,15,"All"].map(v=><button key={v} className={`seg-b${s.cards===v?" on":""}`} onClick={()=>p("cards",v)} style={{minWidth:40}}>{v}</button>)}</div>
+        </div>
+
+        {/* Timer */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 0",borderBottom:`1px solid ${bord}`}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,color:text}}>Time per Card</div>
+            <div style={{fontSize:12,color:sub,marginTop:2}}>Remaining seconds = speed bonus pts</div>
+          </div>
+          <div className="seg">{[10,15,20,0].map(v=><button key={v} className={`seg-b${s.timer===v?" on":""}`} onClick={()=>p("timer",v)} style={{minWidth:40}}>{v||"Off"}</button>)}</div>
+        </div>
+
+        {/* Difficulty */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 0",borderBottom:`1px solid ${bord}`}}>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,color:text}}>Difficulty</div>
+            <div style={{fontSize:12,color:sub,marginTop:2}}>Hard: all cards visible, scroll to navigate</div>
+          </div>
+          <div className="seg">{["easy","hard"].map(v=><button key={v} className={`seg-b${s.mode===v?" on":""}`} onClick={()=>p("mode",v)} style={{minWidth:52,textTransform:"capitalize"}}>{v}</button>)}</div>
+        </div>
+
+        <div style={{marginTop:8,padding:"12px 0",fontSize:13,color:note,lineHeight:1.7}}>
+          <strong style={{color:gold}}>How scoring works:</strong><br/>
+          Each correct placement earns <strong style={{color:text}}>100 pts × streak</strong> (up to ×5).<br/>
+          With timer on, leftover seconds add a <strong style={{color:text}}>speed bonus</strong> of up to 100 pts.
+        </div>
+
+        <button onClick={()=>onDone(s)} style={{marginTop:18,width:"100%",background:`linear-gradient(135deg,${gold},${lm?"#7a5010":"#9a6f28"})`,border:"none",color:lm?"#fff":"#0a0804",padding:"13px 0",borderRadius:10,cursor:"pointer",fontSize:16,fontWeight:700,fontFamily:"'Playfair Display',serif",letterSpacing:2}}>
+          SAVE & CLOSE
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Feedback Overlay ──────────────────────────────────────────────────────
+function FBOverlay({fb}){
+  if(!fb)return null;
+  const ok=fb.type==="correct";
+  return(
+    <div className="overlay-in" style={{position:"fixed",inset:0,zIndex:1000,pointerEvents:"none",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:ok?"radial-gradient(ellipse at center,rgba(74,222,128,.14) 0%,transparent 65%)":"radial-gradient(ellipse at center,rgba(248,113,113,.16) 0%,transparent 65%)"}}>
+      <div style={{position:"absolute",inset:0,border:`5px solid ${ok?"rgba(74,222,128,.5)":"rgba(248,113,113,.5)"}`,pointerEvents:"none"} }/>
+      <div style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:100,lineHeight:1,color:ok?"#4ade80":"#f87171",textShadow:ok?"0 0 60px rgba(74,222,128,.95),0 0 120px rgba(74,222,128,.5)":"0 0 60px rgba(248,113,113,.95),0 0 120px rgba(248,113,113,.5)",animation:"resBounce .38s cubic-bezier(.34,1.4,.64,1) both"}}>{ok?"✓":"✗"}</div>
+      <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:26,letterSpacing:7,color:ok?"#4ade80":"#f87171",textShadow:ok?"0 0 30px rgba(74,222,128,.8)":"0 0 30px rgba(248,113,113,.8)",animation:"resBounce .38s .07s cubic-bezier(.34,1.4,.64,1) both",marginTop:8}}>{ok?"CORRECT":"WRONG"}</div>
+      {ok&&fb.pts>0&&<div style={{fontFamily:"'Crimson Text',serif",fontSize:22,color:"rgba(74,222,128,.75)",marginTop:10,animation:"resBounce .38s .13s cubic-bezier(.34,1.4,.64,1) both"}}>+{fb.pts}{fb.mult>1&&<span style={{opacity:.65}}> ×{fb.mult} streak!</span>}{fb.speed>0&&<span style={{opacity:.5,fontSize:16}}> +{fb.speed} speed</span>}</div>}
+      {!ok&&<div style={{fontFamily:"'Crimson Text',serif",fontSize:17,fontStyle:"italic",color:"rgba(248,113,113,.65)",marginTop:10,animation:"resBounce .38s .13s cubic-bezier(.34,1.4,.64,1) both"}}>card moved to correct position</div>}
+    </div>
+  );
+}
+
+// ─── Ghost card preview ────────────────────────────────────────────────────
+function Ghost({card,images,T}){
+  const gold=T?.gold||"#c9a84c";
+  const text=T?.text||"#e8d9b5";
+  const surf=T?.surface||"linear-gradient(155deg,#1f1708,#110d05)";
+  return(
+    <div className="ghost-p" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,padding:"7px 9px",borderRadius:10,background:surf,border:`1.5px dashed ${gold}`,width:118,pointerEvents:"none"}}>
+      {images[card.id]?<img src={images[card.id]} alt="" referrerPolicy="no-referrer" style={{width:82,height:54,objectFit:"cover",borderRadius:6,opacity:.5}} onError={e=>e.target.style.display="none"}/>:<div style={{width:82,height:54,borderRadius:6,background:"rgba(201,168,76,.06)"}}/>}
+      <div style={{fontFamily:"'Playfair Display',serif",fontSize:10,fontWeight:700,color:gold,textAlign:"center",lineHeight:1.3}}>{card.title}</div>
+      <div style={{fontSize:9,color:gold,opacity:.6,letterSpacing:1}}>drop here</div>
+    </div>
+  );
+}
+
+// ─── Main App ──────────────────────────────────────────────────────────────
+function App(){
+  const [screen,  setScreen]  =useState("menu");
+  const [cfg,     setCfg]     =useState({sound:true,cards:8,timer:15,mode:"hard",lightMode:false});
+  const [showSet, setShowSet] =useState(false);
+  const [isFullscreen, setIsFullscreen]=useState(false);
+  const [datasetScreen, setDatasetScreen]=useState(false); // show dataset picker
+  const [allEvts, setAllEvts] =useState(null);
+  const [images,  setImages]  =useState({});
+
+  // game state
+  const [deck,     setDeck]    =useState([]);
+  const [timeline, setTimeline]=useState([]);
+  const [lostIds,  setLostIds] =useState(new Set());
+  const [dyingId,  setDyingId] =useState(null);
+  const [score,    setScore]   =useState(0);
+  const [streakUI, setStreakUI]=useState(0);
+  const [maxStreak,setMaxStreak]=useState(0);
+  const [feedback, setFeedback]=useState(null);
+  const [popups,   setPopups]  =useState([]);
+  const [shaking,  setShaking] =useState(false);
+  const [overSlot, setOverSlot]=useState(null);
+  const [dragging, setDragging]=useState(false);
+  const [timeLeft, setTimeLeft]=useState(0);
+  const [pDrag,    setPDrag]   =useState(null);
+  const [wrongChipId,setWrongChipId]=useState(null);
+  const [cardInfo, setCardInfo]=useState(null);
+
+  const timelineRef  =useRef([]);
+  const allPlacedRef =useRef([]);
+  const gameSizeRef  =useRef(0);
+  const busyRef      =useRef(false);
+  const cardRef      =useRef(null);  // always mirrors deck[0]
+  const streakRef    =useRef(0);
+  const correctRef   =useRef(0);
+  const soundRef     =useRef(true);
+  const cfgRef       =useRef(cfg);
+  const timerIntervalRef=useRef(null);
+  const cardStartRef =useRef(0);
+  const prevSlotRef  =useRef(null);
+  const pidRef       =useRef(0);
+  const tlScrollRef  =useRef(null);
+  const scrollRafRef =useRef(null);
+  const scrollSpeedRef=useRef(0);
+  const overSlotRef  =useRef(null);
+  const settledChipsRef=useRef(new Set());
+  const wrongIdsRef  =useRef(new Set());
+  const wrongTimerRef=useRef(null);
+  const scrollStartRef=useRef(null);
+  const inScrollZoneRef=useRef(null); // 'left'|'right'|null
+
+  // keep refs in sync
+  useEffect(()=>{timelineRef.current=timeline;},[timeline]);
+  useEffect(()=>{soundRef.current=cfg.sound;},[cfg.sound]);
+  useEffect(()=>{cfgRef.current=cfg;},[cfg]);
+  const card=deck[0]||null;
+  useEffect(()=>{cardRef.current=card;},[card]);
+
+  const sfx=useCallback(fn=>{ if(soundRef.current) fn(); },[]);
+
+  // ── Load data ─────────────────────────────────────────────────────────
+  const loadData=useCallback((raw)=>{
+    try{
+      const parsed=typeof raw==="string"?JSON.parse(raw):raw;
+      const arr=Array.isArray(parsed)?parsed:(parsed.events||parsed.data||Object.values(parsed));
+      const norm=arr.map((e,i)=>({id:i,title:e.title||"Untitled",date:e.date||e.year||"",description:e.description||e.desc||"",image:e.image||null})).filter(e=>e.date);
+      if(!norm.length)throw new Error("No entries with valid 'date' fields found.");
+      const imgMap={};
+      norm.forEach(e=>{if(e.image)imgMap[e.id]=e.image;});
+      setAllEvts(norm);setImages(imgMap);
+      norm.forEach(async e=>{
+        if(e.image)return;
+        const img=await wikiImg(e.title);
+        if(img)setImages(p=>({...p,[e.id]:img}));
+      });
+      return norm;
+    }catch{return null;}
+  },[]);
+
+  // ── Start game ────────────────────────────────────────────────────────
+  const startGame=useCallback((evts,overrideCfg)=>{
+    const c=overrideCfg||cfgRef.current;
+    const n=c.cards==="All"?evts.length:Math.min(c.cards,evts.length);
+    const pool=shuffle(evts).slice(0,n);
+
+    // reset all mutable refs first
+    busyRef.current=false;
+    streakRef.current=0;
+    correctRef.current=0;
+    timelineRef.current=[];
+    allPlacedRef.current=[];
+    gameSizeRef.current=pool.length;
+    placingCardRef.current=null;
+    settledChipsRef.current=new Set();
+    wrongIdsRef.current=new Set();
+    setWrongChipId(null);
+    setCardInfo(null);
+    if(timerIntervalRef.current){clearInterval(timerIntervalRef.current);timerIntervalRef.current=null;}
+
+    setDeck(pool);setTimeline([]);setLostIds(new Set());setDyingId(null);
+    setScore(0);setStreakUI(0);setMaxStreak(0);
+    setFeedback(null);setPopups([]);setShaking(false);setPDrag(null);
+    setTimeLeft(c.timer||0);setOverSlot(null);setDragging(false);
+    setScreen("game");
+  },[]);
+
+  // ── Timer per card ────────────────────────────────────────────────────
+  useEffect(()=>{
+    if(screen!=="game"||!card||!cfgRef.current.timer)return;
+    if(timerIntervalRef.current){clearInterval(timerIntervalRef.current);}
+    setTimeLeft(cfgRef.current.timer);
+    cardStartRef.current=Date.now();
+    timerIntervalRef.current=setInterval(()=>{
+      setTimeLeft(t=>{
+        const next=t-1;
+        // play tick/urgent sounds directly — no state dependency
+        if(next>0&&next<=3) sfx(SFX.urgent);
+        else if(next>0&&next<=7) sfx(SFX.tick);
+        if(next<=0){clearInterval(timerIntervalRef.current);return 0;}
+        return next;
+      });
+    },1000);
+    return()=>{if(timerIntervalRef.current){clearInterval(timerIntervalRef.current);timerIntervalRef.current=null;}};
+  },[card?.id,screen,sfx]);
+
+  const placingCardRef=useRef(null);
+
+  // ── Place card ────────────────────────────────────────────────────────
+  const place=useCallback((slotIdx)=>{
+    const card=cardRef.current;
+    if(!card||placingCardRef.current===card.id)return;
+    placingCardRef.current=card.id;
+    busyRef.current=true;
+    if(wrongTimerRef.current){clearTimeout(wrongTimerRef.current);wrongTimerRef.current=null;}
+    setWrongChipId(null); // clear any lingering wrong highlight from previous card
+    if(timerIntervalRef.current){clearInterval(timerIntervalRef.current);timerIntervalRef.current=null;}
+    setOverSlot(null);setDragging(false);prevSlotRef.current=null;
+    sfx(SFX.place);
+
+    // Read from ref — guaranteed current
+    const currentTimeline=timelineRef.current;
+    const elapsed=(Date.now()-cardStartRef.current)/1000;
+    const timerSecs=cfgRef.current.timer;
+    const speedBonus=timerSecs?Math.max(0,Math.round((1-Math.min(elapsed,timerSecs)/timerSecs)*100)):0;
+    const isHard=cfgRef.current.mode==="hard";
+
+    const sorted=[...currentTimeline,card].sort((a,b)=>parseDate(a.date)-parseDate(b.date));
+    const correctIdx=sorted.findIndex(c=>c.id===card.id);
+
+    const sameDate=t=>parseDate(t.date).getTime()===parseDate(card.date).getTime();
+    const firstSame=sorted.findIndex(sameDate);
+    const lastSame=sorted.length-1-[...sorted].reverse().findIndex(sameDate);
+    const isCorrect=slotIdx>=firstSame&&slotIdx<=lastSame;
+
+    const fullSorted=[...allPlacedRef.current,card].sort((a,b)=>parseDate(a.date)-parseDate(b.date));
+    allPlacedRef.current=fullSorted;
+
+    let newTL=sorted,expelled=null;
+    if(!isHard&&sorted.length>MAX_TL){
+      const dL=correctIdx,dR=sorted.length-1-correctIdx;
+      if(dL>=dR){expelled=sorted[0];newTL=sorted.slice(1);}
+      else{expelled=sorted[sorted.length-1];newTL=sorted.slice(0,-1);}
+      setDyingId(expelled.id);
+      sfx(SFX.destroy);
+      setTimeout(()=>{setLostIds(p=>new Set([...p,expelled.id]));setDyingId(null);},600);
+    }
+
+    timelineRef.current=newTL;
+
+    let pts=0,mult=1;
+    if(isCorrect){
+      streakRef.current+=1;
+      correctRef.current+=1;
+      mult=Math.min(streakRef.current,5);
+      pts=100*mult+speedBonus;
+      setScore(s=>s+pts);
+      setStreakUI(streakRef.current);
+      setMaxStreak(m=>Math.max(m,streakRef.current));
+      setTimeout(()=>sfx(SFX.correct),80);
+      if(mult>1)setTimeout(()=>sfx(SFX.streak,mult),220);
+      const id=pidRef.current++;
+      setPopups(p=>[...p,{id,pts,mult,speed:speedBonus}]);
+      setTimeout(()=>setPopups(p=>p.filter(x=>x.id!==id)),1300);
+    }else{
+      streakRef.current=0;
+      setStreakUI(0);
+      setShaking(true);
+      wrongIdsRef.current.add(card.id);
+      sfx(SFX.wrong);
+      setTimeout(()=>setShaking(false),540);
+    }
+
+    setWrongChipId(isCorrect?null:card.id);
+    setFeedback({id:card.id,type:isCorrect?"correct":"wrong",pts,mult,speed:speedBonus});
+    setTimeline(newTL);
+    setDeck(p=>p.slice(1));
+    const placedId=card.id;
+    setTimeout(()=>{
+      setFeedback(null);
+      busyRef.current=false;
+      placingCardRef.current=null;
+      settledChipsRef.current.add(placedId);
+    },700);
+    
+    if(!isCorrect){
+      const wrongTimer=setTimeout(()=>setWrongChipId(null),3000);
+      wrongTimerRef.current=wrongTimer;
+    } else {
+      if(wrongTimerRef.current){clearTimeout(wrongTimerRef.current);wrongTimerRef.current=null;}
+      setWrongChipId(null);
+    }
+  },[sfx]);
+
+  // auto end
+  useEffect(()=>{
+    if(screen==="game"&&deck.length===0){
+      const t=setTimeout(()=>setScreen("results"),1400);
+      return()=>clearTimeout(t);
+    }
+  },[deck.length,screen]);
+
+  const toggleFullscreen=()=>setIsFullscreen(f=>!f);
+
+  // ── Theme (light / dark) ────────────────────────────────────────────────
+  const LM=cfg.lightMode;
+  const T={
+    bg:        LM?"#f5f0e8":"#0a0804",
+    bgGrad:    LM?"radial-gradient(ellipse at 25% 65%,rgba(200,170,80,.18) 0%,transparent 55%)":"radial-gradient(ellipse at 25% 65%,rgba(55,38,7,.7) 0%,transparent 55%)",
+    surface:   LM?"linear-gradient(155deg,#fffdf5,#f5eed8)":"linear-gradient(155deg,#1f1708,#110d05)",
+    surfaceAlt:LM?"linear-gradient(155deg,#f0e8d0,#e8dfc0)":"linear-gradient(155deg,#1e1608,#12100a)",
+    border:    LM?"rgba(160,120,40,.3)":"rgba(201,168,76,.22)",
+    borderSub: LM?"rgba(160,120,40,.15)":"rgba(201,168,76,.18)",
+    text:      LM?"#2a1f08":"#f0e2c0",
+    textSub:   LM?"rgba(60,40,10,.6)":"rgba(232,217,181,.62)",
+    textMuted: LM?"rgba(60,40,10,.35)":"rgba(232,217,181,.38)",
+    gold:      LM?"#9a6f10":"#c9a84c",
+    header:    LM?"rgba(240,230,200,.85)":"rgba(0,0,0,.55)",
+    tl:        LM?"rgba(240,228,200,.9)":"rgba(0,0,0,.62)",
+    chipBg:    LM?"linear-gradient(155deg,#faf4e0,#f0e8c8)":"linear-gradient(155deg,#1e1608,#12100a)",
+    overlay:   LM?"rgba(230,215,170,.85)":"rgba(0,0,0,.72)",
+  };
+
+  const placed=deck.length?timeline.length+(deck.length<(allEvts||DATASETS.europe).length?1:0):timeline.length;
+  const livePct=correctRef.current>0?Math.round((correctRef.current/Math.max(correctRef.current+(placed-correctRef.current),1))*100):100;
+
+  // ════════════════════════════════════════════════════════════════════
+  // MENU
+  // ════════════════════════════════════════════════════════════════════
+  if(screen==="menu")return(
+    <div style={{...(isFullscreen?{position:"fixed",inset:0,zIndex:9999}:{}),minHeight:"100vh",background:T.bgGrad,backgroundColor:T.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Crimson Text',Georgia,serif",color:T.text,gap:0,padding:32,position:"relative",overflow:"hidden"}}>
+      <style>{G}</style>
+      {showSet&&<SettingsModal cfg={cfg} LM={LM} onLiveChange={setCfg} onDone={s=>{setCfg(s);setShowSet(false);}}/>}
+
+      {datasetScreen&&(
+        <div style={{position:"fixed",inset:0,zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",background:T.overlay,backdropFilter:"blur(10px)",animation:"overlayIn .2s ease both"}}
+          onClick={()=>setDatasetScreen(false)}>
+          <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:22,padding:"32px 36px",maxWidth:420,width:"90%",boxShadow:"0 32px 80px rgba(0,0,0,.5)",animation:"fadeUp .3s cubic-bezier(.34,1.2,.64,1) both",display:"flex",flexDirection:"column",gap:14}}
+            onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:20,letterSpacing:5,color:T.gold,marginBottom:4}}>CHOOSE A DATASET</div>
+            {DATASET_META.map(d=>(
+              <button key={d.key}
+                onClick={()=>{sfx(SFX.menu);setDatasetScreen(false);startGame(DATASETS[d.key],cfg);}}
+                style={{display:"flex",alignItems:"center",gap:16,background:"none",border:`1.5px solid ${T.borderSub}`,borderRadius:12,padding:"16px 20px",cursor:"pointer",textAlign:"left",transition:"all .15s",fontFamily:"'Crimson Text',serif"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=T.gold;e.currentTarget.style.background=LM?"rgba(160,120,40,.06)":"rgba(201,168,76,.06)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=T.borderSub;e.currentTarget.style.background="none";}}
+              >
+                <span style={{fontSize:32,flexShrink:0}}>{d.icon}</span>
+                <div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:T.text}}>{d.label}</div>
+                  <div style={{fontSize:13,color:T.textMuted,marginTop:2}}>{d.sub}</div>
+                </div>
+              </button>
+            ))}
+            <button
+              onClick={()=>setDatasetScreen(false)}
+              style={{marginTop:4,background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14,fontFamily:"'Crimson Text',serif",letterSpacing:1}}
+            >Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{position:"absolute",top:"17%",left:0,right:0,height:1,background:`linear-gradient(to right,transparent,${LM?"rgba(160,120,40,.12)":"rgba(201,168,76,.07)"},transparent)`,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:"20%",left:0,right:0,height:1,background:`linear-gradient(to right,transparent,${LM?"rgba(160,120,40,.12)":"rgba(201,168,76,.07)"},transparent)`,pointerEvents:"none"}}/>
+
+      <div className="fade-up" style={{textAlign:"center",marginBottom:52}}>
+        <div style={{fontSize:10,letterSpacing:10,color:LM?"rgba(100,70,10,.4)":"rgba(201,168,76,.35)",marginBottom:18}}>WELCOME TO</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:86,letterSpacing:18,color:T.gold,lineHeight:1,textShadow:LM?"none":"0 0 40px rgba(201,168,76,.25),0 2px 0 rgba(0,0,0,.9)"}}>CHRONO</div>
+        <div style={{fontSize:11,letterSpacing:9,color:LM?"rgba(100,70,10,.45)":"rgba(201,168,76,.42)",marginTop:6}}>TIMELINE CHALLENGE</div>
+        <div style={{width:130,height:1,background:`linear-gradient(to right,transparent,${T.gold},transparent)`,margin:"20px auto 0",opacity:.5}}/>
+      </div>
+
+      <div className="fade-up" style={{display:"flex",flexDirection:"column",gap:13,width:280,alignItems:"stretch"}}>
+        <button
+          style={{background:`linear-gradient(135deg,${T.gold},${LM?"#7a5010":"#9a6f28"})`,border:"none",color:LM?"#fff":"#0a0804",padding:"17px 0",borderRadius:12,cursor:"pointer",fontSize:19,fontWeight:700,fontFamily:"'Playfair Display',serif",letterSpacing:3,boxShadow:`0 8px 32px ${LM?"rgba(160,120,40,.2)":"rgba(201,168,76,.22)"}`,transition:"transform .15s,box-shadow .15s"}}
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="none";}}
+          onClick={()=>setDatasetScreen(true)}
+        >▶  PLAY</button>
+
+        <button
+          style={{background:"none",border:`1px solid ${T.borderSub}`,color:T.textMuted,padding:"12px 0",borderRadius:12,cursor:"pointer",fontSize:15,fontFamily:"'Crimson Text',serif",letterSpacing:2,transition:"all .2s"}}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor=T.gold;e.currentTarget.style.color=T.gold;}}
+          onMouseLeave={e=>{e.currentTarget.style.borderColor=T.borderSub;e.currentTarget.style.color=T.textMuted;}}
+          onClick={()=>setShowSet(true)}
+        >⚙  Settings</button>
+      </div>
+
+      <div className="fade-up" style={{marginTop:36,display:"flex",gap:22,fontSize:12,color:T.textMuted,letterSpacing:1}}>
+        <span>{cfg.cards} cards</span><span>·</span>
+        <span>{cfg.timer?`${cfg.timer}s timer`:"No timer"}</span><span>·</span>
+        <span style={{textTransform:"capitalize"}}>{cfg.mode}</span><span>·</span>
+        <span>{cfg.sound?"🔊":"🔇"}</span>
+      </div>
+      <button onClick={toggleFullscreen} style={{position:"absolute",bottom:22,right:24,background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}} title="Fullscreen">⛶</button>
+    </div>
+  );
+
+  // ════════════════════════════════════════════════════════════════════
+  // RESULTS
+  // ════════════════════════════════════════════════════════════════════
+  if(screen==="results"){
+    const allPlaced=allPlacedRef.current;
+    const total=gameSizeRef.current||1;
+    const pct=Math.round((correctRef.current/total)*100);
+    const rank=getRank(pct);
+    return(
+      <div style={{...(isFullscreen?{position:"fixed",inset:0,zIndex:9999}:{}),minHeight:"100vh",background:T.bg,fontFamily:"'Crimson Text',Georgia,serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"36px 24px 52px",gap:18,overflowY:"auto"}}>
+        <style>{G}</style>
+        <div style={{fontSize:10,letterSpacing:8,color:LM?"rgba(100,70,10,.4)":"rgba(201,168,76,.35)"}}>GAME COMPLETE</div>
+
+        <div className="rank-in" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+          <div style={{width:88,height:88,borderRadius:"50%",border:`3px solid ${rank.col}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 40px ${rank.glow},inset 0 0 20px rgba(0,0,0,.4)`,background:"rgba(0,0,0,.3)"}}>
+            <span style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:44,color:rank.col,textShadow:`0 0 20px ${rank.glow}`}}>{rank.label}</span>
+          </div>
+          <div style={{fontSize:11,letterSpacing:5,color:"rgba(201,168,76,.4)"}}>RANK</div>
+        </div>
+
+        <div style={{display:"flex",gap:20,background:LM?"rgba(160,120,40,.06)":"rgba(201,168,76,.04)",border:`1px solid ${LM?"rgba(160,120,40,.15)":"rgba(201,168,76,.1)"}`,borderRadius:18,padding:"18px 30px",flexWrap:"wrap",justifyContent:"center"}}>
+          {[
+            {l:"SCORE",    v:score.toLocaleString(),              c:"#c9a84c"},
+            {l:"CORRECT",  v:`${correctRef.current} / ${total}`,  c:correctRef.current===total?"#4ade80":"#e8d9b5"},
+            {l:"ACCURACY", v:`${pct}%`,                           c:pct>=80?"#4ade80":"#e8d9b5"},
+            {l:"STREAK",   v:`🔥 ${maxStreak}`,                   c:"#f8a600"},
+          ].map((s,i)=>(
+            <div key={i} style={{textAlign:"center",minWidth:80}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:32,fontWeight:700,color:s.c,lineHeight:1.1}}>{s.v}</div>
+              <div style={{fontSize:9,letterSpacing:4,color:"rgba(201,168,76,.35)",marginTop:4}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {cfg.timer>0&&<div style={{fontSize:13,color:T.textMuted,fontStyle:"italic",marginTop:-4}}>Score includes speed bonuses — faster answers earn more</div>}
+
+        <div style={{fontSize:9,letterSpacing:5,color:T.textMuted}}>ALL EVENTS — CHRONOLOGICAL ORDER</div>
+        <div style={{width:"100%",maxWidth:700,display:"flex",flexDirection:"column",gap:7,maxHeight:"45vh",overflowY:"auto"}}>
+          {allPlaced.map((c,i)=>{
+            const wasWrong=wrongIdsRef.current.has(c.id);
+            return(
+              <div key={c.id} style={{display:"flex",gap:14,padding:"11px 15px",
+                background:wasWrong?"rgba(248,113,113,.06)":LM?"rgba(160,120,40,.04)":"rgba(255,255,255,.02)",
+                border:`1px solid ${wasWrong?"rgba(248,113,113,.3)":LM?"rgba(160,120,40,.1)":"rgba(201,168,76,.08)"}`,
+                borderRadius:10,alignItems:"center"}}>
+                <div style={{minWidth:28,height:28,borderRadius:"50%",
+                  background:wasWrong?"rgba(248,113,113,.15)":"rgba(201,168,76,.1)",
+                  border:`1px solid ${wasWrong?"rgba(248,113,113,.4)":"rgba(201,168,76,.22)"}`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:12,color:wasWrong?"#f87171":"#c9a84c",fontWeight:700,flexShrink:0}}>{i+1}</div>
+                {images[c.id]&&<img src={images[c.id]} referrerPolicy="no-referrer"
+                  style={{width:42,height:42,borderRadius:6,objectFit:"cover",opacity:wasWrong?.5:.82,flexShrink:0,filter:wasWrong?"grayscale(.5)":"none"}}
+                  alt={c.title} onError={e=>e.target.style.display="none"}/>}
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:wasWrong?"#f87171":T.text}}>{c.title}</div>
+                    {wasWrong&&<span style={{fontSize:11,color:"rgba(248,113,113,.7)",background:"rgba(248,113,113,.1)",padding:"1px 7px",borderRadius:4,letterSpacing:1}}>WRONG</span>}
+                  </div>
+                  <div style={{fontSize:13,color:wasWrong?"rgba(248,113,113,.6)":T.gold,marginTop:2}}>{fmtDate(c.date)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{display:"flex",gap:12,marginTop:4}}>
+          <button style={{background:"linear-gradient(135deg,#c9a84c,#9a6f28)",border:"none",color:"#0a0804",padding:"12px 34px",borderRadius:10,cursor:"pointer",fontSize:16,fontWeight:700,fontFamily:"'Playfair Display',serif",letterSpacing:1}} onClick={()=>{startGame(allEvts||DATASETS.europe,cfg);}}>Play Again</button>
+          <button style={{background:"none",border:"1px solid rgba(201,168,76,.25)",color:"#c9a84c",padding:"12px 34px",borderRadius:10,cursor:"pointer",fontSize:16,fontFamily:"'Crimson Text',serif"}} onClick={()=>setScreen("menu")}>Main Menu</button>
+        </div>
+      </div>
+    );
+  }
+
+  const isHard=cfg.mode==="hard";
+  const timerPct=cfg.timer?(timeLeft/(cfg.timer||1)):1;
+  const timerCol=timerPct>.5?"#c9a84c":timerPct>.25?"#f8a600":"#f87171";
+
+  const items=[];
+  for(let i=0;i<=timeline.length;i++){
+    items.push({t:"z",i});
+    if(i<timeline.length) items.push({t:"c",c:timeline[i],i});
+  }
+
+  // ── Pointer event handlers ─────────────────────────────────────────────
+
+  const onCardPointerDown=e=>{
+    if(e.button!==0)return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    sfx(SFX.drag);
+    setDragging(true);
+    setPDrag({startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,active:false});
+  };
+
+  const onCardPointerMove=e=>{
+    if(!pDrag)return;
+    const dx=e.clientX-pDrag.startX, dy=e.clientY-pDrag.startY;
+    const nowActive=pDrag.active||Math.hypot(dx,dy)>8;
+    if(!nowActive){
+      if(nowActive!==pDrag.active) setPDrag(p=>({...p,active:false,inZone:null}));
+      return;
+    }
+
+    const tlEl=tlScrollRef.current;
+    const tlRect=tlEl?.getBoundingClientRect();
+    let inZone=null, snapX=null, snapY=null;
+
+    if(isHard&&tlEl&&tlRect&&e.clientY>=tlRect.top-30&&e.clientY<=tlRect.bottom+30){
+      const distL=e.clientX-tlRect.left;
+      const distR=tlRect.right-e.clientX;
+      if(distL>=0&&distL<SCROLL_ZONE_W){
+        inZone='left';
+        snapX=tlRect.left+SCROLL_ZONE_W/2;
+        snapY=(tlRect.top+tlRect.bottom)/2;
+      } else if(distR>=0&&distR<SCROLL_ZONE_W){
+        inZone='right';
+        snapX=tlRect.right-SCROLL_ZONE_W/2;
+        snapY=(tlRect.top+tlRect.bottom)/2;
+      }
+    }
+    inScrollZoneRef.current=inZone;
+
+    const renderX=snapX!==null?snapX*0.6+e.clientX*0.4:e.clientX;
+    const renderY=snapY!==null?snapY*0.6+e.clientY*0.4:e.clientY;
+
+    if(nowActive!==pDrag.active) setPDrag(p=>({...p,x:renderX,y:renderY,active:nowActive,inZone}));
+    else setPDrag(p=>({...p,x:renderX,y:renderY,inZone}));
+
+    if(isHard&&tlEl){
+      let speed=0;
+      if(inZone==='left')  speed=-1;
+      if(inZone==='right') speed= 1;
+      if(speed===0){
+        scrollSpeedRef.current=0; scrollStartRef.current=null;
+        if(scrollRafRef.current){cancelAnimationFrame(scrollRafRef.current);scrollRafRef.current=null;}
+      } else {
+        if(!scrollStartRef.current) scrollStartRef.current=Date.now();
+        if(!scrollRafRef.current){
+          const tick=()=>{
+            if(scrollSpeedRef.current===0){scrollRafRef.current=null;return;}
+            const elapsed=Math.min((Date.now()-(scrollStartRef.current||Date.now()))/2000,1);
+            tlScrollRef.current.scrollLeft+=scrollSpeedRef.current*(8+elapsed*32);
+            scrollRafRef.current=requestAnimationFrame(tick);
+          };
+          scrollRafRef.current=requestAnimationFrame(tick);
+        }
+        scrollSpeedRef.current=speed;
+      }
+    }
+
+    let si=null;
+    if(!inZone&&tlEl&&tlRect&&e.clientY>=tlRect.top-40&&e.clientY<=tlRect.bottom+40){
+      const zones=tlEl.querySelectorAll('[data-slot]');
+      let bestDist=Infinity;
+      for(const zone of zones){
+        const r=zone.getBoundingClientRect();
+        const cx=(r.left+r.right)/2;
+        const dist=Math.abs(e.clientX-cx);
+        if(dist<bestDist){bestDist=dist;si=parseInt(zone.dataset.slot);}
+      }
+    }
+    if(si!==overSlotRef.current){
+      overSlotRef.current=si;
+      if(si!==null&&si!==prevSlotRef.current){sfx(SFX.hover);prevSlotRef.current=si;}
+      setOverSlot(si);
+    }
+  };
+
+  const stopScroll=()=>{
+    scrollSpeedRef.current=0;
+    scrollStartRef.current=null;
+    if(scrollRafRef.current){cancelAnimationFrame(scrollRafRef.current);scrollRafRef.current=null;}
+  };
+
+  const onCardPointerUp=e=>{
+    if(!pDrag)return;
+    const wasActive=pDrag.active;
+    const wasInZone=pDrag.inZone; 
+    stopScroll();
+    overSlotRef.current=null; inScrollZoneRef.current=null;
+    setPDrag(null);setDragging(false);setOverSlot(null);prevSlotRef.current=null;
+    if(!wasActive||wasInZone)return;
+    const tlEl=tlScrollRef.current;
+    const tlRect=tlEl?.getBoundingClientRect();
+    if(tlEl&&tlRect&&e.clientY>=tlRect.top-40&&e.clientY<=tlRect.bottom+40){
+      const zones=tlEl.querySelectorAll('[data-slot]');
+      let bestDist=Infinity,bestSlot=null;
+      for(const zone of zones){
+        const r=zone.getBoundingClientRect();
+        const cx=(r.left+r.right)/2;
+        const dist=Math.abs(e.clientX-cx);
+        if(dist<bestDist){bestDist=dist;bestSlot=parseInt(zone.dataset.slot);}
+      }
+      if(bestSlot!==null)place(bestSlot);
+    }
+  };
+
+  const onCardPointerCancel=()=>{
+    stopScroll();
+    overSlotRef.current=null;
+    setPDrag(null);setDragging(false);setOverSlot(null);prevSlotRef.current=null;
+  };
+
+  const ghostSize={w:160,h:104};
+
+  return(
+    <div style={{
+      ...(isFullscreen?{position:"fixed",inset:0,zIndex:9999}:{height:"100vh"}),
+      display:"flex",flexDirection:"column",
+      background:T.bg,
+      fontFamily:"'Crimson Text',Georgia,serif",
+      color:T.text,overflow:"hidden",position:"relative"
+    }}>
+      <style>{G}</style>
+      <FBOverlay fb={feedback} LM={LM}/>
+
+      {cardInfo&&(
+        <div style={{position:"fixed",inset:0,zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",background:T.overlay,backdropFilter:"blur(8px)"}}
+          onClick={()=>setCardInfo(null)}>
+          <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:20,overflow:"hidden",maxWidth:520,width:"90%",boxShadow:"0 24px 80px rgba(0,0,0,.5)",animation:"fadeUp .25s ease both"}}
+            onClick={e=>e.stopPropagation()}>
+            {images[cardInfo.id]&&<img src={images[cardInfo.id]} referrerPolicy="no-referrer" style={{width:"100%",height:180,objectFit:"cover",opacity:.85}} onError={e=>e.target.style.display="none"}/>}
+            <div style={{padding:"20px 24px 24px",display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:700,color:T.text}}>{cardInfo.title}</div>
+              <div style={{fontSize:14,color:T.gold,fontWeight:600}}>{fmtDate(cardInfo.date)}</div>
+              <div style={{fontSize:15,color:T.textSub,lineHeight:1.75,marginTop:4}}>{cardInfo.description}</div>
+              <button onClick={()=>setCardInfo(null)} style={{marginTop:8,background:"none",border:`1px solid ${T.borderSub}`,color:T.textMuted,padding:"8px 0",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"'Crimson Text',serif"}}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {popups.map(p=>(
+        <div key={p.id} className="score-pop" style={{fontFamily:"'Playfair Display',serif",fontSize:36,fontWeight:900,color:"#4ade80",textShadow:"0 0 28px rgba(74,222,128,.9)"}}>
+          +{p.pts}{p.mult>1&&<span style={{fontSize:19,opacity:.8}}> ×{p.mult}</span>}
+        </div>
+      ))}
+
+      {pDrag?.active&&card&&(
+        <div className="ghost-p" style={{position:"fixed",left:pDrag.x-ghostSize.w/2,top:pDrag.y-ghostSize.h/2,width:ghostSize.w,height:ghostSize.h,zIndex:3000,pointerEvents:"none",display:"flex",flexDirection:"column",borderRadius:10,overflow:"hidden",background:T.surface,border:`2px solid ${T.gold}`,boxShadow:`0 12px 40px rgba(0,0,0,.5)`,transform:"rotate(2deg) scale(1.04)"}}>
+          {images[card.id]
+            ?<img src={images[card.id]} alt="" referrerPolicy="no-referrer" style={{width:"100%",height:56,objectFit:"cover",opacity:.8,flexShrink:0}} onError={e=>e.target.style.display="none"}/>
+            :<div style={{height:56,background:LM?"rgba(160,120,40,.08)":"rgba(201,168,76,.04)",flexShrink:0}}/>
+          }
+          <div style={{padding:"5px 8px",flex:1,display:"flex",alignItems:"center"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:11,fontWeight:700,color:T.text,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{card.title}</div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER */}
+      <div style={{display:"flex",alignItems:"center",padding:"8px 18px",borderBottom:`1px solid ${LM?"rgba(160,120,40,.15)":"rgba(201,168,76,.08)"}`,background:T.header,backdropFilter:"blur(16px)",flexShrink:0,gap:11,zIndex:20}}>
+        <button onClick={()=>setScreen("menu")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:13,fontFamily:"'Crimson Text',serif",letterSpacing:1,padding:"0 8px 0 0",flexShrink:0}}>← Menu</button>
+        <div style={{fontFamily:"'Playfair Display',serif",fontWeight:900,fontSize:14,letterSpacing:9,color:T.gold,flexShrink:0}}>CHRONO</div>
+        <div style={{display:"flex",gap:3,flex:1,maxWidth:180}}>
+          {deck.concat(timeline).map((_,i)=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<timeline.length?T.gold:LM?"rgba(160,120,40,.15)":"rgba(201,168,76,.1)",transition:"background .5s"}}/>)}
+        </div>
+        <div style={{fontSize:11,color:T.textMuted,letterSpacing:1,flexShrink:0}}>{timeline.length}/{gameSizeRef.current}</div>
+        <div style={{flex:1}}/>
+        {cfg.timer>0&&(
+          <div style={{display:"flex",alignItems:"center",gap:7,minWidth:100,flexShrink:0}}>
+            <div style={{flex:1,height:4,borderRadius:2,background:LM?"rgba(160,120,40,.15)":"rgba(201,168,76,.1)",overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:2,background:timerCol,width:`${timerPct*100}%`,transition:"width 1s linear,background .3s",boxShadow:timerPct<.25?`0 0 10px ${timerCol}`:undefined}}/>
+            </div>
+            <div style={{fontSize:15,fontFamily:"'Playfair Display',serif",fontWeight:700,color:timerCol,minWidth:20,textAlign:"right"}}>{timeLeft||""}</div>
+          </div>
+        )}
+        {streakUI>=2&&(
+          <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(248,166,0,.08)",border:"1px solid rgba(248,166,0,.18)",borderRadius:8,padding:"3px 10px",flexShrink:0}}>
+            <span className="flame" style={{fontSize:15}}>🔥</span>
+            <span style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,color:"#f8a600"}}>{streakUI}×</span>
+          </div>
+        )}
+        <div className="glow" style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:T.gold,minWidth:82,textAlign:"right",flexShrink:0}}>{score.toLocaleString()}</div>
+        <button onClick={toggleFullscreen} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18,padding:"0 0 0 6px",flexShrink:0,lineHeight:1}} title={isFullscreen?"Exit fullscreen":"Fullscreen"}>{isFullscreen?"✕⛶":"⛶"}</button>
+      </div>
+
+      {/* CARD */}
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"14px 24px",overflow:"hidden",position:"relative"}}>
+        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:LM?"radial-gradient(circle,rgba(160,120,40,.04) 0%,transparent 65%)":"radial-gradient(circle,rgba(201,168,76,.023) 0%,transparent 65%)",pointerEvents:"none"}}/>
+        {card?(
+          <div key={card.id} className={`card-anim${shaking?" shake":""}`}
+            onPointerDown={onCardPointerDown}
+            onPointerMove={onCardPointerMove}
+            onPointerUp={onCardPointerUp}
+            onPointerCancel={onCardPointerCancel}
+            style={{display:"flex",background:T.surface,border:`1px solid ${T.border}`,borderRadius:22,overflow:"hidden",boxShadow:LM?"0 8px 40px rgba(100,70,10,.15)":"0 24px 80px rgba(0,0,0,.85)",maxWidth:630,width:"100%",maxHeight:"100%",cursor:pDrag?.active?"grabbing":"grab",userSelect:"none",touchAction:"none",opacity:pDrag?.active?.4:1,transition:"opacity .1s"}}
+          >
+            <div style={{width:220,minWidth:220,position:"relative",overflow:"hidden",background:LM?"#e8dfc0":"#0d0a04",flexShrink:0}}>
+              {images[card.id]
+                ?<img src={images[card.id]} alt={card.title} referrerPolicy="no-referrer" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.85,display:"block"}} onError={e=>e.target.style.display="none"}/>
+                :<div style={{width:"100%",minHeight:240,height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:52,opacity:.1}}>📜</span></div>
+              }
+              <div style={{position:"absolute",inset:0,background:LM?`linear-gradient(to right,transparent 50%,${T.surface.match(/#[a-f0-9]+/i)?.[0]||"#fffdf5"})`:`linear-gradient(to right,transparent 50%,#1f1708)`}}/>
+              <div style={{position:"absolute",bottom:10,left:10}}>
+                <span style={{fontSize:9,letterSpacing:3,color:LM?"rgba(100,70,10,.5)":"rgba(201,168,76,.45)",background:LM?"rgba(240,228,200,.85)":"rgba(10,8,4,.75)",padding:"3px 8px",borderRadius:4}}>HISTORICAL EVENT</span>
+              </div>
+            </div>
+            <div style={{flex:1,padding:"26px 26px 20px",display:"flex",flexDirection:"column",gap:10}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:700,lineHeight:1.2,color:T.text}}>{card.title}</div>
+              <div style={{width:44,height:2,background:`linear-gradient(to right,${T.gold},transparent)`,flexShrink:0}}/>
+              <div style={{fontSize:16,color:T.textSub,lineHeight:1.75,flex:1,overflowY:"auto"}}>{card.description}</div>
+              <div style={{paddingTop:12,borderTop:`1px solid ${LM?"rgba(160,120,40,.12)":"rgba(201,168,76,.08)"}`,display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+                <span className="bounce" style={{fontSize:17,color:T.textMuted}}>↓</span>
+                <span style={{fontSize:14,color:T.textMuted}}>
+                  {(!cfg.mode||cfg.mode==="easy")&&timeline.length>=MAX_TL?"Timeline full — placing drops an end card!":"Drag to timeline — or click any zone"}
+                </span>
+              </div>
+            </div>
+          </div>
+        ):(
+          <div style={{fontSize:18,color:T.textMuted,fontStyle:"italic"}}>Tallying results…</div>
+        )}
+      </div>
+
+      {/* TIMELINE */}
+      <div style={{flexShrink:0,background:T.tl,borderTop:`1px solid ${LM?"rgba(160,120,40,.12)":"rgba(201,168,76,.09)"}`,padding:"8px 14px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontSize:9,letterSpacing:5,color:LM?"rgba(100,70,10,.35)":"rgba(201,168,76,.26)"}}>TIMELINE — OLDEST ←———→ NEWEST</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {isHard&&timeline.length>0&&(
+              <>
+                <button
+                  onClick={()=>{if(tlScrollRef.current)tlScrollRef.current.scrollLeft-=140;}}
+                  style={{background:LM?"rgba(160,120,40,.08)":"rgba(0,0,0,.4)",border:`1px dashed ${pDrag?.inZone==='left'?T.gold:T.borderSub}`,borderRadius:7,width:32,height:22,cursor:"pointer",color:pDrag?.inZone==='left'?T.gold:T.textMuted,fontSize:14,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}
+                >←</button>
+                <button
+                  onClick={()=>{if(tlScrollRef.current)tlScrollRef.current.scrollLeft+=140;}}
+                  style={{background:LM?"rgba(160,120,40,.08)":"rgba(0,0,0,.4)",border:`1px dashed ${pDrag?.inZone==='right'?T.gold:T.borderSub}`,borderRadius:7,width:32,height:22,cursor:"pointer",color:pDrag?.inZone==='right'?T.gold:T.textMuted,fontSize:14,lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}
+                >→</button>
+              </>
+            )}
+            {!isHard&&<div style={{fontSize:11,letterSpacing:2,color:timeline.length>=MAX_TL?"rgba(248,113,113,.4)":T.textMuted}}>{timeline.length}/{MAX_TL}</div>}
+          </div>
+        </div>
+
+        <div style={{position:"relative"}}>
+          <div
+            ref={tlScrollRef}
+            style={{display:"flex",alignItems:"stretch",minHeight:108,gap:0,overflowX:isHard?"auto":"visible"}}
+            className="tl-scroll"
+          >
+          {timeline.length===0?(
+            <div
+              data-slot="0"
+              className={`zone${overSlot===0?" over":""}`}
+              style={{flex:1,minHeight:94,borderRadius:14,border:`1.5px dashed ${overSlot===0?T.gold:LM?"rgba(160,120,40,.2)":"rgba(201,168,76,.18)"}`}}
+              onClick={()=>place(0)}
+            >
+              {overSlot===0&&card&&pDrag?.active
+                ?<Ghost card={card} images={images} T={T}/>
+                :<span style={{color:T.textMuted,fontSize:15,fontStyle:"italic",fontFamily:"'Crimson Text',serif"}}>← drop your first event anywhere here →</span>
+              }
+            </div>
+          ):(
+            items.map(item=>{
+              if(item.t==="z"){
+                const si=item.i, isOver=overSlot===si;
+                const isEdge=si===0||si===timeline.length;
+                const singleCard=timeline.length===1;
+                return(
+                  <div key={`z${si}`} data-slot={String(si)}
+                    className={`zone${isOver?" over":""}`}
+                    onClick={()=>place(si)}
+                    style={isEdge?{
+                      flex: singleCard?"1":"0 0 56px",
+                      minWidth: singleCard?0:56,
+                      border:`1.5px dashed ${isOver?T.gold:LM?"rgba(160,120,40,.22)":"rgba(201,168,76,.25)"}`,
+                      borderRadius:10,
+                      background:isOver?LM?"rgba(160,120,40,.08)":"rgba(201,168,76,.08)":LM?"rgba(160,120,40,.03)":"rgba(201,168,76,.03)",
+                      transition:"border-color .15s,background .15s",
+                    }:{}}
+                  >
+                    {isEdge&&!isOver&&(
+                      <span style={{fontSize:14,color:LM?"rgba(100,70,10,.3)":"rgba(201,168,76,.3)",pointerEvents:"none",userSelect:"none"}}>
+                        {si===0?"◀":"▶"}
+                      </span>
+                    )}
+                    {isOver&&card&&pDrag?.active?<Ghost card={card} images={images}/>:null}
+                  </div>
+                );
+              }
+              const c=item.c;
+              const chipIdx=item.i; 
+              const isDying=dyingId===c.id;
+              const isNew=feedback!==null&&feedback.id===c.id;
+              const isSettled=settledChipsRef.current.has(c.id);
+
+              let cls="";
+              if(isDying)             cls="chip-out";
+              else if(isNew)          cls=`chip-in ${feedback.type==="correct"?"chip-ok":"chip-bad"}`;
+              else if(!isSettled)     cls="chip-in";
+
+              const isLeftNeighbour  = overSlot!==null && overSlot===chipIdx+1 && pDrag?.active;
+              const isRightNeighbour = overSlot!==null && overSlot===chipIdx   && pDrag?.active;
+              const isNeighbour=isLeftNeighbour||isRightNeighbour;
+              const chipScale=isNeighbour?1.06:1;
+
+              const isWrong=wrongChipId===c.id;
+
+              return(
+                <div key={`c${c.id}`} className={cls} onClick={()=>setCardInfo(c)} style={{
+                  width:124,minWidth:124,flexShrink:0,
+                  display:"flex",flexDirection:"column",
+                  background:T.chipBg,
+                  border:`1px solid ${isDying?"rgba(248,113,113,.3)":isWrong?"rgba(248,113,113,.6)":T.borderSub}`,
+                  borderRadius:10,overflow:"hidden",alignSelf:"stretch",
+                  transform:`scale(${chipScale})`,
+                  transition:"transform .15s ease, border-color .3s, box-shadow .3s",
+                  zIndex:isNeighbour?2:1,
+                  cursor:"pointer",
+                  boxShadow:isWrong
+                    ?"0 0 0 1.5px rgba(248,113,113,.5),0 0 16px rgba(248,113,113,.35)"
+                    :isNeighbour?"0 0 0 1.5px rgba(201,168,76,.5),0 4px 20px rgba(201,168,76,.2)"
+                    :"none",
+                }}>
+                  {images[c.id]
+                    ?<img src={images[c.id]} alt={c.title} referrerPolicy="no-referrer"
+                        style={{width:"100%",height:44,objectFit:"cover",opacity:isDying?.22:.6,flexShrink:0,filter:isDying?"grayscale(1)":"none",transition:"opacity .3s"}}
+                        onError={e=>e.target.style.display="none"}/>
+                    :<div style={{height:44,background:"rgba(201,168,76,.03)",flexShrink:0}}/>
+                  }
+                  <div style={{padding:"6px 8px",flex:1}}>
+                    <div style={{fontFamily:"'Playfair Display',serif",fontSize:11,fontWeight:700,color:isDying?"rgba(248,113,113,.45)":T.text,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",marginBottom:4}}>{c.title}</div>
+                    <div className="date-in" style={{fontSize:10,color:isDying?"rgba(248,113,113,.35)":"#c9a84c",fontWeight:600}}>{fmtDate(c.date)}</div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root')); 
+root.render(<App />);
+
+    </script>
+</body>
+</html>
