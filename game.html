@@ -765,14 +765,20 @@ function App(){
     const tlRect=tlEl?.getBoundingClientRect();
     let inZone=null, snapX=null, snapY=null;
 
+    // The auto-scroll bands sit on top of the first and last slots, so only arm
+    // them when there is actually something to scroll to. Otherwise they would
+    // swallow drops aimed at either end of the timeline.
+    const canScrollL=!!tlEl&&tlEl.scrollLeft>1;
+    const canScrollR=!!tlEl&&tlEl.scrollLeft<tlEl.scrollWidth-tlEl.clientWidth-1;
+
     if(isHard&&tlEl&&tlRect&&e.clientY>=tlRect.top-30&&e.clientY<=tlRect.bottom+30){
       const distL=e.clientX-tlRect.left;
       const distR=tlRect.right-e.clientX;
-      if(distL>=0&&distL<SCROLL_ZONE_W){
+      if(canScrollL&&distL>=0&&distL<SCROLL_ZONE_W){
         inZone='left';
         snapX=tlRect.left+SCROLL_ZONE_W/2;
         snapY=(tlRect.top+tlRect.bottom)/2;
-      } else if(distR>=0&&distR<SCROLL_ZONE_W){
+      } else if(canScrollR&&distR>=0&&distR<SCROLL_ZONE_W){
         inZone='right';
         snapX=tlRect.right-SCROLL_ZONE_W/2;
         snapY=(tlRect.top+tlRect.bottom)/2;
@@ -809,7 +815,8 @@ function App(){
     }
 
     let si=null;
-    if(!inZone&&tlEl&&tlRect&&e.clientY>=tlRect.top-40&&e.clientY<=tlRect.bottom+40){
+    // Tracked even over a scroll band, so the target slot is always visible.
+    if(tlEl&&tlRect&&e.clientY>=tlRect.top-40&&e.clientY<=tlRect.bottom+40){
       const zones=tlEl.querySelectorAll('[data-slot]');
       let bestDist=Infinity;
       for(const zone of zones){
@@ -835,11 +842,12 @@ function App(){
   const onCardPointerUp=e=>{
     if(!pDrag)return;
     const wasActive=pDrag.active;
-    const wasInZone=pDrag.inZone; 
     stopScroll();
     overSlotRef.current=null; inScrollZoneRef.current=null;
     setPDrag(null);setDragging(false);setOverSlot(null);prevSlotRef.current=null;
-    if(!wasActive||wasInZone)return;
+    // Releasing over a scroll band still drops the card at the nearest slot —
+    // letting go there used to discard the drag entirely.
+    if(!wasActive)return;
     const tlEl=tlScrollRef.current;
     const tlRect=tlEl?.getBoundingClientRect();
     if(tlEl&&tlRect&&e.clientY>=tlRect.top-40&&e.clientY<=tlRect.bottom+40){
@@ -1024,8 +1032,8 @@ function App(){
                     className={`zone${isOver?" over":""}`}
                     onClick={()=>place(si)}
                     style={isEdge?{
-                      flex: singleCard?"1":"0 0 56px",
-                      minWidth: singleCard?0:56,
+                      flex: singleCard?"1":"0 0 78px",
+                      minWidth: singleCard?0:78,
                       border:`1.5px dashed ${isOver?T.gold:LM?"rgba(160,120,40,.22)":"rgba(201,168,76,.25)"}`,
                       borderRadius:10,
                       background:isOver?LM?"rgba(160,120,40,.08)":"rgba(201,168,76,.08)":LM?"rgba(160,120,40,.03)":"rgba(201,168,76,.03)",

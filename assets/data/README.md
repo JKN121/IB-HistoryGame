@@ -45,10 +45,35 @@ file and reload the game — nothing in `game.html` needs to change.
 | `title` | yes | Shown on the card. |
 | `date` | yes | `YYYY-MM-DD` preferred. A bare year (`"1947"`) also works and displays as `1947 AD`. **An event without a date is dropped** — the date is what the game sorts on. |
 | `description` | no | Shown when a player clicks a placed card. |
-| `image` | no | Direct image URL. If omitted, the game looks one up on Wikipedia by title. |
+| `image` | no | Direct image URL. If omitted, the game looks one up on Wikipedia by title. See the Wikimedia note below. |
 
 There is no `id` field: ids are assigned automatically at load time, so you never
 have to keep numbers unique by hand.
+
+## Using Wikimedia images
+
+Wikimedia **rejects hotlinked thumbnails at arbitrary widths**. A URL like
+`.../thumb/a/a5/Foo.jpg/400px-Foo.jpg` returns an error page reading
+*"Use thumbnail sizes listed on https://w.wiki/GHai"*, because `400` is not a
+standard size. Only these widths work:
+
+```
+20  40  60  120  250  330  500  960  1280  1920  3840
+```
+
+`500px-` is the right choice for this game — it matches the largest place an
+image is shown (the card detail popup).
+
+The reliable way to get a working URL is to let Wikipedia generate one rather
+than typing a width yourself:
+
+```
+https://en.wikipedia.org/w/api.php?action=query&titles=Berlin_Wall&prop=pageimages&piprop=thumbnail&pithumbsize=500&format=json
+```
+
+Use the `thumbnail.source` value from the response, minus any `?utm_...` query
+string. Simplest of all: **omit `image` entirely** and let the game do this
+lookup itself at load time.
 
 ## Adding a dataset
 
