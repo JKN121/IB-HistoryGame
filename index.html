@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono | Interactive IB History Timeline Game</title>
+    
+    <meta name="description" content="Chrono is a web-based timeline game designed around the IB History syllabus. Review chronological event sequences for Authoritarian States, Move to Global War, and the Cold War.">
+    <meta name="keywords" content="IB History game, timeline tool, Authoritarian States chronology, Move to Global War, Cold War sequence, interactive history resource, historical timeline test">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ib-history.com/">
+    <meta property="og:title" content="Chrono | IB History Timeline Game">
+    <meta property="og:description" content="A chronological matching game focused on 20th-century history topics within the IB syllabus.">
+    <meta property="og:image" content="https://ib-history.com/assets/images/og-preview.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/landing.css">
+
+    <!-- Not deferred: applies the saved theme before the first paint. -->
+    <script src="assets/js/theme.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <span class="brand-logo">CHRONO</span>
+            <button id="theme-toggle" aria-label="Toggle Dark Mode">
+                <span class="toggle-icon">🌓</span>
+            </button>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-container">
+            <p class="hero-badge">100% Free Studying Tool</p>
+            <h1>Chrono</h1>
+            <p class="hero-subtitle">
+                A browser-based review tool built to match <strong class="keyword-highlight">20th-century history datasets</strong>. Drag and drop historical developments into their proper <strong class="keyword-highlight">chronological sequence</strong> to evaluate your knowledge of event orderings.
+            </p>
+            
+            <div class="cta-wrapper">
+                <a href="how-to-play.html" class="cta-button">Start Playing</a>
+            </div>
+            
+            <div class="hero-mockup-wrapper">
+                <button class="slide-arrow prev-arrow" id="carousel-prev" aria-label="Previous Slide">&#x2039;</button>
+                
+                <div class="hero-mockup">
+                    <img id="carousel-image" src="assets/images/hero-1-light.jpg" alt="Chrono interface showing historical cards arranged sequentially on a digital timeline axis" class="responsive-img theme-sync-img" data-base-name="hero-1">
+                </div>
+                
+                <button class="slide-arrow next-arrow" id="carousel-next" aria-label="Next Slide">&#x203A;</button>
+            </div>
+        </div>
+    </header>
+
+    <hr class="section-divider">
+
+    <section id="syllabus-topics" class="topics-section">
+        <div class="container">
+            <h2>Syllabus-Aligned Datasets</h2>
+            <p class="section-lead">The application contains pre-configured timeline lists structured around the core components of the <strong class="keyword-highlight">IB History exam blueprint</strong>.</p>
+            
+            <div class="topics-grid">
+                <div class="topic-card">
+                    <div class="card-icon">🏰</div>
+                    <h3>Authoritarian States</h3>
+                    <p>Covers structural events relating to the <strong class="keyword-highlight">rise, consolidation, and domestic policies</strong> of regimes led by <strong class="keyword-highlight">Hitler, Mussolini, and Mao Zedong</strong>.</p>
+                </div>
+                <div class="topic-card">
+                    <div class="card-icon">🦅</div>
+                    <h3>Move to Global War</h3>
+                    <p>Focuses on the chronological timeline of <strong class="keyword-highlight">Japanese expansionism in East Asia</strong> alongside <strong class="keyword-highlight">German and Italian aggression</strong> during the interwar period.</p>
+                </div>
+                <div class="topic-card">
+                    <div class="card-icon">🗺️</div>
+                    <h3>The Cold War</h3>
+                    <p>Tracks international relations chronologically from <strong class="keyword-highlight">wartime conferences</strong> through major <strong class="keyword-highlight">superpower flashpoints, proxy conflicts, and treaties</strong> up to 1991.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-banner">
+        <div class="container">
+            <h2>Access the application</h2>
+            <p>The tool operates completely within modern desktop browsers without user registration requirements.</p>
+            <a href="how-to-play.html" class="cta-button secondary">Start Playing</a>
+        </div>
+    </footer>
+
+    <script src="assets/js/landing.js"></script>
+</body>
+</html>

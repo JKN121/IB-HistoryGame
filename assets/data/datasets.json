@@ -1,0 +1,244 @@
+{
+  "datasets": [
+    {
+      "key": "europe",
+      "label": "Europe",
+      "icon": "🏰",
+      "sub": "From the Magna Carta to the Cold War",
+      "events": [
+        {
+          "title": "Magna Carta Signed",
+          "date": "1215-06-15",
+          "description": "King John seals the Great Charter at Runnymede, establishing that the monarch is subject to the rule of law.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg/400px-Magna_Carta_%28British_Library_Cotton_MS_Augustus_II.106%29.jpg"
+        },
+        {
+          "title": "Black Death Reaches Europe",
+          "date": "1347-10-01",
+          "description": "The bubonic plague arrives in Sicily from Crimea. Over the next five years it kills one-third of Europe's entire population.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Danse_macabre_by_Michael_Wolgemut.png/400px-Danse_macabre_by_Michael_Wolgemut.png"
+        },
+        {
+          "title": "Gutenberg Prints Bible",
+          "date": "1455-02-23",
+          "description": "Johannes Gutenberg completes the first major book printed in Europe using movable type, revolutionising the spread of knowledge.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/400px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg"
+        },
+        {
+          "title": "French Revolution",
+          "date": "1789-07-14",
+          "description": "The storming of the Bastille ignites a radical transformation of France, sweeping away centuries of monarchy and launching the ideals of liberty and equality.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Prise_de_la_Bastille.jpg/400px-Prise_de_la_Bastille.jpg"
+        },
+        {
+          "title": "Napoleon Defeated at Waterloo",
+          "date": "1815-06-18",
+          "description": "Wellington and Blücher's forces defeat Napoleon at Waterloo, ending the Napoleonic Wars and reshaping Europe's borders.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Battle_of_Waterloo_1815.PNG/400px-Battle_of_Waterloo_1815.PNG"
+        },
+        {
+          "title": "Darwin Publishes Origin of Species",
+          "date": "1859-11-24",
+          "description": "Darwin's theory of evolution by natural selection transforms biology and our understanding of life on Earth.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Darwin%27s_finches_by_Gould.jpg/400px-Darwin%27s_finches_by_Gould.jpg"
+        },
+        {
+          "title": "First World War Begins",
+          "date": "1914-07-28",
+          "description": "Austria-Hungary declares war on Serbia following the assassination of Archduke Franz Ferdinand, igniting a conflict that kills 20 million people.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Over_the_top_TNT.jpg/400px-Over_the_top_TNT.jpg"
+        },
+        {
+          "title": "Russian Revolution",
+          "date": "1917-11-07",
+          "description": "The Bolsheviks seize power in Petrograd, overthrowing the Provisional Government and establishing Soviet rule.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Russian_soldiers_during_the_July_Days.jpg/400px-Russian_soldiers_during_the_July_Days.jpg"
+        },
+        {
+          "title": "D-Day Normandy Landings",
+          "date": "1944-06-06",
+          "description": "Allied forces launch the largest seaborne invasion in history on the beaches of Normandy, turning the tide of World War II.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Into_the_Jaws_of_Death_23-0455M_edit.jpg/400px-Into_the_Jaws_of_Death_23-0455M_edit.jpg"
+        },
+        {
+          "title": "Fall of the Berlin Wall",
+          "date": "1989-11-09",
+          "description": "East Germany opens its borders after 28 years. Jubilant crowds tear down the Wall, ending the Cold War's most potent symbol.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Mauer1.jpg/400px-Mauer1.jpg"
+        },
+        {
+          "title": "World Wide Web Invented",
+          "date": "1991-08-06",
+          "description": "Tim Berners-Lee makes the World Wide Web publicly available at CERN, beginning the transformation of human communication.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/WWW_logo_by_Robert_Cailliau.svg/400px-WWW_logo_by_Robert_Cailliau.svg.png"
+        },
+        {
+          "title": "End of Apartheid",
+          "date": "1994-04-27",
+          "description": "South Africa holds its first fully democratic elections. Nelson Mandela becomes president, ending decades of institutionalised racial segregation.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Nelson_Mandela_1994.jpg/400px-Nelson_Mandela_1994.jpg"
+        }
+      ]
+    },
+    {
+      "key": "americas",
+      "label": "Americas",
+      "icon": "🦅",
+      "sub": "From Columbus to the smartphone era",
+      "events": [
+        {
+          "title": "Columbus Reaches Americas",
+          "date": "1492-10-12",
+          "description": "Christopher Columbus makes landfall in the Bahamas, beginning sustained contact between the Old World and the New.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Landing_of_Columbus_%282%29.jpg/400px-Landing_of_Columbus_%282%29.jpg"
+        },
+        {
+          "title": "Declaration of Independence",
+          "date": "1776-07-04",
+          "description": "The thirteen American colonies declare independence from Britain. Thomas Jefferson's document becomes a foundation of modern democratic thought.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/United_States_Declaration_of_Independence.jpg/400px-United_States_Declaration_of_Independence.jpg"
+        },
+        {
+          "title": "Louisiana Purchase",
+          "date": "1803-04-30",
+          "description": "The United States purchases 828,000 square miles from France, doubling the country's size and opening the West.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Louisiana_purchase_map.jpg/400px-Louisiana_purchase_map.jpg"
+        },
+        {
+          "title": "American Civil War Begins",
+          "date": "1861-04-12",
+          "description": "Confederate forces attack Fort Sumter, beginning four years of war that would determine the nation's future and end slavery.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Battle_of_Gettysburg%2C_by_Currier_and_Ives.png/400px-Battle_of_Gettysburg%2C_by_Currier_and_Ives.png"
+        },
+        {
+          "title": "Wright Brothers First Flight",
+          "date": "1903-12-17",
+          "description": "Orville Wright pilots the first powered airplane at Kitty Hawk. The flight lasts 12 seconds and covers 37 metres.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Flightone.jpg/400px-Flightone.jpg"
+        },
+        {
+          "title": "Panama Canal Opens",
+          "date": "1914-08-15",
+          "description": "The Panama Canal opens, connecting the Atlantic and Pacific Oceans and revolutionising global trade routes.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Miraflores.locks.arp.750pix.jpg/400px-Miraflores.locks.arp.750pix.jpg"
+        },
+        {
+          "title": "Wall Street Crash",
+          "date": "1929-10-24",
+          "description": "Black Thursday triggers the Great Depression, wiping out millions of investors and plunging the world into economic crisis.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/American_union_bank.gif/400px-American_union_bank.gif"
+        },
+        {
+          "title": "Moon Landing",
+          "date": "1969-07-20",
+          "description": "Apollo 11 touches down on the Sea of Tranquility. Neil Armstrong becomes the first human to walk on the Moon.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Aldrin_Apollo_11_original.jpg/400px-Aldrin_Apollo_11_original.jpg"
+        },
+        {
+          "title": "Watergate Scandal",
+          "date": "1972-06-17",
+          "description": "The arrest of five men breaking into the Democratic National Committee HQ begins a political crisis that forces Nixon to resign.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/WatergateFromAir.jpg/400px-WatergateFromAir.jpg"
+        },
+        {
+          "title": "9/11 Attacks",
+          "date": "2001-09-11",
+          "description": "Coordinated terrorist attacks destroy the Twin Towers and hit the Pentagon, killing nearly 3,000 people and reshaping global geopolitics.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/South_face_tower_two.jpg/400px-South_face_tower_two.jpg"
+        },
+        {
+          "title": "First iPhone Unveiled",
+          "date": "2007-01-09",
+          "description": "Steve Jobs introduces an iPod, a phone, and an internet communicator in one device. The smartphone era begins.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/IPhone_1st_Gen.svg/200px-IPhone_1st_Gen.svg.png"
+        },
+        {
+          "title": "Obama Elected President",
+          "date": "2008-11-04",
+          "description": "Barack Obama becomes the first African-American President of the United States, winning by a decisive electoral margin.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/President_Barack_Obama.jpg/400px-President_Barack_Obama.jpg"
+        }
+      ]
+    },
+    {
+      "key": "asia",
+      "label": "Asia",
+      "icon": "🏯",
+      "sub": "From the Mongols to modern geopolitics",
+      "events": [
+        {
+          "title": "Mongol Empire Founded",
+          "date": "1206-01-01",
+          "description": "Genghis Khan unites the Mongol tribes and establishes the empire that would become the largest contiguous land empire in history.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Genghis_Khan_at_enthronement.jpg/400px-Genghis_Khan_at_enthronement.jpg"
+        },
+        {
+          "title": "Zheng He's First Voyage",
+          "date": "1405-07-11",
+          "description": "Chinese admiral Zheng He sets sail with 300 ships and 28,000 men, reaching Southeast Asia, India, Arabia and East Africa.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Zheng_He_ship_compare.svg/400px-Zheng_He_ship_compare.svg.png"
+        },
+        {
+          "title": "Battle of Plassey",
+          "date": "1757-06-23",
+          "description": "The British East India Company defeats the Nawab of Bengal, beginning British dominance over the Indian subcontinent.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/The_Battle_of_Plassey.jpg/400px-The_Battle_of_Plassey.jpg"
+        },
+        {
+          "title": "Meiji Restoration",
+          "date": "1868-01-03",
+          "description": "Emperor Meiji is restored to power in Japan, beginning rapid modernisation and the transformation of a feudal state into an industrial power.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Emperor_Meiji.jpg/400px-Emperor_Meiji.jpg"
+        },
+        {
+          "title": "Opium War Ends",
+          "date": "1842-08-29",
+          "description": "China signs the Treaty of Nanking, ceding Hong Kong to Britain and opening treaty ports — the beginning of the 'century of humiliation'.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/First_Opium_War_collage.jpg/400px-First_Opium_War_collage.jpg"
+        },
+        {
+          "title": "Indian Independence",
+          "date": "1947-08-15",
+          "description": "India gains independence from Britain. The subcontinent is partitioned into India and Pakistan in one of history's largest migrations.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Nehru_signing.jpg/400px-Nehru_signing.jpg"
+        },
+        {
+          "title": "People's Republic of China Founded",
+          "date": "1949-10-01",
+          "description": "Mao Zedong proclaims the People's Republic of China in Tiananmen Square after the Communist Party's victory in the civil war.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Mao_Proclaiming_New_China.JPG/400px-Mao_Proclaiming_New_China.JPG"
+        },
+        {
+          "title": "Korean War Armistice",
+          "date": "1953-07-27",
+          "description": "An armistice ends active fighting in the Korean War, leaving the peninsula divided at the 38th parallel — a division that persists today.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Korean_War_armistice_agreement_1953.jpg/400px-Korean_War_armistice_agreement_1953.jpg"
+        },
+        {
+          "title": "Vietnam War Ends",
+          "date": "1975-04-30",
+          "description": "North Vietnamese forces capture Saigon, ending 20 years of war and reunifying Vietnam under communist rule.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Saigon-hubert-van-es.jpg/400px-Saigon-hubert-van-es.jpg"
+        },
+        {
+          "title": "Tiananmen Square Protests",
+          "date": "1989-06-04",
+          "description": "The Chinese military crushes pro-democracy protests in Tiananmen Square, killing hundreds in an event still censored in China.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Tiananmen_Square%2C_1988.jpg/400px-Tiananmen_Square%2C_1988.jpg"
+        },
+        {
+          "title": "Sputnik Launched",
+          "date": "1957-10-04",
+          "description": "The Soviet Union launches the first artificial Earth satellite, triggering the Space Race and shocking the Western world.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Sputnik_asm.jpg/400px-Sputnik_asm.jpg"
+        },
+        {
+          "title": "Atomic Bomb on Hiroshima",
+          "date": "1945-08-06",
+          "description": "The United States drops an atomic bomb on Hiroshima, Japan, killing 80,000 instantly and ushering in the nuclear age.",
+          "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Nagasakibomb.jpg/400px-Nagasakibomb.jpg"
+        }
+      ]
+    }
+  ]
+}
